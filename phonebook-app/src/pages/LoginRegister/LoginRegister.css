@@ -1,0 +1,164 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f4f6fb;
+  padding: 20px;
+}
+
+.auth-box {
+  width: 380px;
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.forgot-box {
+  width: 500px;
+}
+
+.app-name {
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.auth-box h1 {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.forgot-title {
+  text-align: left !important;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.forgot-description {
+  font-size: 17px;
+  line-height: 1.6;
+  color: #222;
+  margin-bottom: 28px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.auth-form input:hover {
+  border-color: #4f46e5;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input {
+  padding-right: 46px !important;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+}
+
+.auth-form button[type="submit"] {
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #4f46e5, #6366f1);
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.auth-form button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+.auth-form button[type="submit"]:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.error-text {
+  color: red;
+  font-size: 12px;
+  margin-top: -6px;
+}
+
+.forgot-password {
+  margin-top: 10px;
+  text-align: right;
+  font-size: 12px;
+  color: #4f46e5;
+  cursor: pointer;
+}
+
+.back-to-login {
+  margin-top: 18px;
+  text-align: center;
+  color: #4f46e5;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.switch-text {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.switch-text span {
+  color: #4f46e5;
+  cursor: pointer;
+}
+
+.stay-signed-in {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: #222;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+.stay-signed-in input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #4f46e5;
+}
