@@ -7,52 +7,146 @@ type Props = {
 
 function LoginRegister({ onLogin }: Props) {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [staySignedIn, setStaySignedIn] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+
+  const isPasswordMatch = password === confirmPassword;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isLogin) {
+      onLogin();
+    }
+  };
+
+  if (showForgotPassword) {
+    return (
+      <div className="auth-container">
+        <div className="auth-box forgot-box">
+          <p className="app-name">Phone Book</p>
+          <h1 className="forgot-title">FORGOTTEN YOUR PASSWORD?</h1>
+
+          <p className="forgot-description">
+            Please enter your e-mail and we will send you a link to reset your
+            password.
+          </p>
+
+          <form className="auth-form" onSubmit={(e) => e.preventDefault()}>
+            <input
+              type="email"
+              placeholder="E-mail"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+            />
+
+            <button type="submit">SEND</button>
+          </form>
+
+          <p className="back-to-login" onClick={() => setShowForgotPassword(false)}>
+            Back to Login
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">
       <div className="auth-box">
-        
-        <p className="app-title">Phone Book</p>
+        <p className="app-name">Phone Book</p>
 
-        <h2>{isLogin ? "Login" : "Register"}</h2>
+        <h1>{isLogin ? "Login" : "Register"}</h1>
 
-        {!isLogin && (
-          <input type="text" placeholder="Phone number" />
-        )}
+        <form className="auth-form" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <>
+              <input type="text" placeholder="Full Name" />
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+              />
+            </>
+          )}
 
-        <input type="email" placeholder="Email" />
+          <input type="email" placeholder="Email" />
 
-        <div className="password-field">
-          <input type="password" placeholder="Password" />
-          <span className="eye">👁</span>
-        </div>
+          <div className="password-wrapper">
+            <input
+              className="password-input"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </button>
+          </div>
 
-        {!isLogin && (
-          <input type="password" placeholder="Confirm Password" />
-        )}
+          {isLogin && (
+            <label className="stay-signed-in">
+              <input
+                type="checkbox"
+                checked={staySignedIn}
+                onChange={(e) => setStaySignedIn(e.target.checked)}
+              />
+              <span>Stay signed in</span>
+            </label>
+          )}
+
+          {!isLogin && (
+            <>
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+
+              {!isPasswordMatch && confirmPassword && (
+                <p className="error-text">Passwords do not match</p>
+              )}
+            </>
+          )}
+
+          <button type="submit" disabled={!isLogin && !isPasswordMatch}>
+            {isLogin ? "Login" : "Register"}
+          </button>
+        </form>
 
         {isLogin && (
-          <label className="stay-signed">
-            <input type="checkbox" />
-            Stay signed in
-          </label>
+          <p
+            className="forgot-password"
+            onClick={() => setShowForgotPassword(true)}
+          >
+            Forgot password?
+          </p>
         )}
 
-        {isLogin && (
-          <p className="forgot">Forgot password?</p>
-        )}
-
-        <button className="login-btn" onClick={onLogin}>
-          {isLogin ? "Login" : "Register"}
-        </button>
-
-        <p className="switch">
+        <p className="switch-text">
           {isLogin ? "Don't have an account?" : "Already have an account?"}
-          <span onClick={() => setIsLogin(!isLogin)}>
+          <span
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setPassword("");
+              setConfirmPassword("");
+            }}
+          >
             {isLogin ? " Register" : " Login"}
           </span>
         </p>
-
       </div>
     </div>
   );
