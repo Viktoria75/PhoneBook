@@ -1,7 +1,7 @@
-import LoginRegister from "./pages/LoginRegister/LoginRegister";
+import ContactList from "./pages/Contact List/ContactList";
 
 function App() {
-  return <LoginRegister />;
+  return <ContactList />;
 }
 
 export default App;
