@@ -3,16 +3,21 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f4f6fb;
+  background:
+    radial-gradient(circle at bottom right, rgba(0, 255, 200, 0.12), transparent 20%),
+    radial-gradient(circle at left center, rgba(80, 100, 255, 0.18), transparent 25%),
+    linear-gradient(90deg, #0a1024 0%, #060b1a 50%, #090f22 100%);
   padding: 20px;
 }
 
 .auth-box {
-  width: 380px;
-  background: white;
+  width: 420px;
+  background: rgba(12, 18, 38, 0.85);
+  border: 1px solid rgba(120, 140, 255, 0.12);
   padding: 32px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
 }
 
 .forgot-box {
@@ -20,29 +25,32 @@
 }
 
 .app-name {
-  text-align: center;
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 8px;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #6f7cff;
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
 .auth-box h1 {
-  text-align: center;
   margin-bottom: 24px;
+  font-size: 48px;
+  color: #f3f6ff;
+  font-weight: 700;
 }
 
 .forgot-title {
-  text-align: left !important;
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 20px;
+  font-size: 30px !important;
+  color: #f3f6ff !important;
+  margin-bottom: 16px;
 }
 
 .forgot-description {
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.6;
-  color: #222;
-  margin-bottom: 28px;
+  color: rgba(230, 235, 255, 0.8);
+  margin-bottom: 24px;
 }
 
 .auth-form {
@@ -53,96 +61,104 @@
 
 .auth-form input {
   width: 100%;
-  box-sizing: border-box;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 140, 255, 0.14);
+  border-radius: 18px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f3f6ff;
   transition: 0.2s;
-  font-size: 14px;
+}
+
+.auth-form input::placeholder {
+  color: rgba(220, 225, 255, 0.4);
 }
 
 .auth-form input:hover {
-  border-color: #4f46e5;
+  border-color: rgba(111, 124, 255, 0.4);
 }
 
 .auth-form input:focus {
   outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+  border-color: #6f7cff;
+  box-shadow: 0 0 0 3px rgba(111, 124, 255, 0.15);
 }
 
 .password-wrapper {
   position: relative;
-  width: 100%;
 }
 
 .password-input {
-  padding-right: 46px !important;
+  padding-right: 48px !important;
 }
 
 .password-toggle {
   position: absolute;
   top: 50%;
-  right: 12px;
+  right: 14px;
   transform: translateY(-50%);
   border: none;
   background: transparent;
   cursor: pointer;
   font-size: 18px;
-  padding: 0;
-  line-height: 1;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .auth-form button[type="submit"] {
-  padding: 12px;
+  margin-top: 6px;
+  padding: 14px;
   border: none;
-  border-radius: 10px;
+  border-radius: 18px;
   background: linear-gradient(90deg, #4f46e5, #6366f1);
   color: white;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
-  font-size: 16px;
-  font-weight: 500;
 }
 
 .auth-form button[type="submit"]:hover {
-  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
 }
 
 .auth-form button[type="submit"]:disabled {
-  background: #ccc;
+  background: #4b4f66;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .error-text {
-  color: red;
+  color: #ff7c9d;
   font-size: 12px;
   margin-top: -6px;
 }
 
 .forgot-password {
-  margin-top: 10px;
+  margin-top: 12px;
   text-align: right;
-  font-size: 12px;
-  color: #4f46e5;
+  font-size: 13px;
+  color: #8f9bff;
   cursor: pointer;
 }
 
 .back-to-login {
   margin-top: 18px;
   text-align: center;
-  color: #4f46e5;
+  color: #8f9bff;
   cursor: pointer;
   font-size: 14px;
 }
 
 .switch-text {
-  margin-top: 16px;
+  margin-top: 18px;
   text-align: center;
+  color: rgba(230, 235, 255, 0.75);
 }
 
 .switch-text span {
-  color: #4f46e5;
+  color: #8f9bff;
   cursor: pointer;
 }
 
@@ -150,8 +166,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 15px;
-  color: #222;
+  font-size: 14px;
+  color: rgba(230, 235, 255, 0.85);
   cursor: pointer;
   margin-top: -4px;
 }
@@ -159,6 +175,6 @@
 .stay-signed-in input {
   width: 16px;
   height: 16px;
+  accent-color: #6f7cff;
   cursor: pointer;
-  accent-color: #4f46e5;
 }
