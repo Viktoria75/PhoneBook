@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import LandingPage from "./pages/LandingPage/landingPage";
 import ContactList from "./pages/Contact List/ContactList";
 import LoginRegister from "./pages/LoginRegister/LoginRegister";
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+function LoginWrapper() {
+  const navigate = useNavigate();
+  return <LoginRegister onLogin={() => navigate('/contacts')} />;
+}
 
-  return isLoggedIn ? (
-    <ContactList />
-  ) : (
-    <LoginRegister onLogin={() => setIsLoggedIn(true)} />
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginWrapper />} />
+        <Route path="/contacts" element={<ContactList />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
