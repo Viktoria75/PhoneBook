@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './landingPage.css'; 
 
 const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   const sampleContact = {
     name: "Ivan Ivanov",
     phone: "+359 888 123 456",
@@ -22,7 +25,7 @@ const LandingPage: React.FC = () => {
       <header className="header-section">
         <nav className="nav-container">
           <h2 className="logo">PhoneBook</h2>
-          <button className="primary-button" style={{color: '#4f46e5'}}>Sign Up</button>
+          <button className="primary-button" style={{color: '#4f46e5'}} onClick={() => navigate('/login')}>Sign Up</button>
         </nav>
 
         <div className="hero-container">
@@ -33,9 +36,10 @@ const LandingPage: React.FC = () => {
               Simple, fast, and secure.
             </p>
             <div className="hero-buttons">
-              <button className="primary-button">Try Free Demo</button>
-              <button className="secondary-button">Watch Video</button>
+              <button className="primary-button" onClick={() => navigate('/login')}>Try Free Demo</button>
+              <button className="secondary-button" onClick={() => navigate('/login')}>Watch Video</button>
             </div>
+
           </div>
 
           <div className="contact-card">
