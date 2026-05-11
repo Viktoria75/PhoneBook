@@ -1,48 +1,218 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 import "./ContactInfo.css";
 
+interface Phone {
+  label: string;
+  number: string;
+}
+
+interface Address {
+  street?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+}
+
 interface Contact {
-  id: number;
-  name: string;
-  phone: string;
+  _id: string;
+  firstName: string;
+  lastName: string;
+  phones: Phone[];
   email?: string;
-  address?: string;
+  address?: Address;
   notes?: string;
   photoUrl?: string;
+  isFavorite?: boolean;
   avatarColor: string;
   initials: string;
 }
 
-// Mock contacts data (same as in ContactList)
-const contacts: Contact[] = [
-  { id: 1, name: "Alice Pemberton", phone: "+1 (555) 201-4892", email: "alice@example.com", address: "123 Main St", notes: "Best friend", avatarColor: "linear-gradient(135deg,#f093fb,#f5576c)", initials: "AP" },
-  { id: 2, name: "Ben Hargrove", phone: "+1 (555) 334-7761", email: "ben@example.com", address: "456 Oak Ave", notes: "College buddy", avatarColor: "linear-gradient(135deg,#4facfe,#00f2fe)", initials: "BH" },
-  { id: 3, name: "Clara Voss", phone: "+1 (555) 498-3210", email: "clara@example.com", address: "789 Pine Rd", notes: "Colleague", avatarColor: "linear-gradient(135deg,#43e97b,#38f9d7)", initials: "CV" },
-  { id: 4, name: "Daniel Mercer", phone: "+1 (555) 112-6530", email: "daniel@example.com", address: "321 Elm St", notes: "", avatarColor: "linear-gradient(135deg,#fa709a,#fee140)", initials: "DM" },
-  { id: 5, name: "Elena Russo", phone: "+1 (555) 778-9043", email: "elena@example.com", address: "654 Maple Dr", notes: "Sister", avatarColor: "linear-gradient(135deg,#a18cd1,#fbc2eb)", initials: "ER" },
-  { id: 6, name: "Finn O'Sullivan", phone: "+1 (555) 663-2187", email: "finn@example.com", address: "987 Birch Ln", notes: "Mentor", avatarColor: "linear-gradient(135deg,#fccb90,#d57eeb)", initials: "FO" },
-  { id: 7, name: "Grace Nakamura", phone: "+1 (555) 549-8820", email: "grace@example.com", address: "111 Cedar Way", notes: "Team lead", avatarColor: "linear-gradient(135deg,#f7971e,#ffd200)", initials: "GN" },
-  { id: 8, name: "Hugo Castillo", phone: "+1 (555) 430-1174", email: "hugo@example.com", address: "222 Spruce St", notes: "", avatarColor: "linear-gradient(135deg,#30cfd0,#667eea)", initials: "HC" },
-  { id: 9, name: "Isla Thornton", phone: "+1 (555) 227-5563", email: "isla@example.com", address: "333 Ash Ct", notes: "Friend", avatarColor: "linear-gradient(135deg,#96fbc4,#f9f586)", initials: "IT" },
-  { id: 10, name: "James Bellamy", phone: "+1 (555) 881-3397", email: "james@example.com", address: "444 Walnut Ave", notes: "Work contact", avatarColor: "linear-gradient(135deg,#fddb92,#d1fdff)", initials: "JB" },
-  { id: 11, name: "Kira Fontaine", phone: "+1 (555) 362-7748", email: "kira@example.com", address: "555 Cherry Ln", notes: "", avatarColor: "linear-gradient(135deg,#e0c3fc,#8ec5fc)", initials: "KF" },
-  { id: 12, name: "Luca Ferretti", phone: "+1 (555) 514-0029", email: "luca@example.com", address: "666 Ash Rd", notes: "Italian colleague", avatarColor: "linear-gradient(135deg,#84fab0,#8fd3f4)", initials: "LF" },
+const AVATAR_GRADIENTS = [
+  "linear-gradient(135deg,#f093fb,#f5576c)",
+  "linear-gradient(135deg,#4facfe,#00f2fe)",
+  "linear-gradient(135deg,#43e97b,#38f9d7)",
+  "linear-gradient(135deg,#fa709a,#fee140)",
+  "linear-gradient(135deg,#a18cd1,#fbc2eb)",
+  "linear-gradient(135deg,#fccb90,#d57eeb)",
 ];
+
+function getToken(): string | null {
+  return localStorage.getItem("token");
+}
+
+function authHeaders() {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function formatAddress(addr?: Address): string {
+  if (!addr) return "";
+  const parts = [addr.street, addr.city, addr.country, addr.postalCode].filter(Boolean);
+  return parts.join(", ");
+}
 
 const ContactInfo: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [contact, setContact] = useState<Contact | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
-  const [contact, setContact] = useState<Contact | null>(
-    contacts.find(c => c.id === parseInt(id || "")) || null
-  );
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<Contact | null>(contact);
+  const [editForm, setEditForm] = useState({
+    firstName: "",
+    lastName: "",
+    phones: [{ label: "mobile", number: "" }] as Phone[],
+    email: "",
+    address: { street: "", city: "", country: "" } as Address,
+    notes: "",
+  });
 
-  if (!contact) {
+  // Fetch contact from API
+  useEffect(() => {
+    if (!id) return;
+    const fetchContact = async () => {
+      try {
+        const res = await axios.get(`/api/contacts/${id}`, { headers: authHeaders() });
+        const c = res.data;
+        const enriched: Contact = {
+          ...c,
+          avatarColor: AVATAR_GRADIENTS[c.firstName.charCodeAt(0) % AVATAR_GRADIENTS.length],
+          initials: `${(c.firstName || "?")[0]}${(c.lastName || "?")[0]}`.toUpperCase(),
+        };
+        setContact(enriched);
+      } catch (err: any) {
+        if (err.response?.status === 401) {
+          navigate("/login");
+          return;
+        }
+        setError("Contact not found");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContact();
+  }, [id, navigate]);
+
+  const handleEditStart = () => {
+    if (!contact) return;
+    setEditForm({
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      phones: contact.phones.length > 0 ? [...contact.phones] : [{ label: "mobile", number: "" }],
+      email: contact.email || "",
+      address: {
+        street: contact.address?.street || "",
+        city: contact.address?.city || "",
+        country: contact.address?.country || "",
+      },
+      notes: contact.notes || "",
+    });
+    setIsEditing(true);
+  };
+
+  const handleEditCancel = () => setIsEditing(false);
+
+  const handleEditSave = async () => {
+    if (!contact) return;
+    try {
+      const res = await axios.put(`/api/contacts/${contact._id}`, {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        phones: editForm.phones.filter(p => p.number.trim()),
+        email: editForm.email,
+        address: editForm.address,
+        notes: editForm.notes,
+      }, { headers: authHeaders() });
+
+      const c = res.data;
+      setContact({
+        ...c,
+        avatarColor: contact.avatarColor,
+        initials: `${(c.firstName || "?")[0]}${(c.lastName || "?")[0]}`.toUpperCase(),
+      });
+      setIsEditing(false);
+    } catch (err) {
+      alert("Failed to save changes.");
+    }
+  };
+
+  const handlePhoneChange = (index: number, field: "label" | "number", value: string) => {
+    const updated = [...editForm.phones];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditForm({ ...editForm, phones: updated });
+  };
+
+  const handleAddPhone = () => {
+    setEditForm({
+      ...editForm,
+      phones: [...editForm.phones, { label: "mobile", number: "" }],
+    });
+  };
+
+  const handleRemovePhone = (index: number) => {
+    if (editForm.phones.length <= 1) return;
+    const updated = editForm.phones.filter((_, i) => i !== index);
+    setEditForm({ ...editForm, phones: updated });
+  };
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !contact) return;
+
+    setUploading(true);
+    setUploadError("");
+    setUploadSuccess("");
+
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const res = await axios.post(`/api/contacts/${contact._id}/photo`, formData, {
+        headers: {
+          ...authHeaders(),
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setContact({ ...contact, photoUrl: res.data.photoUrl });
+      setUploadSuccess("Photo uploaded successfully!");
+      setTimeout(() => setUploadSuccess(""), 3000);
+    } catch (err) {
+      setUploadError("Failed to upload photo.");
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!contact) return;
+    if (!window.confirm(`Delete ${contact.firstName} ${contact.lastName}?`)) return;
+
+    try {
+      await axios.delete(`/api/contacts/${contact._id}`, { headers: authHeaders() });
+      navigate("/contacts");
+    } catch (err) {
+      alert("Failed to delete contact.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="ci-page">
+        <div className="ci-not-found">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !contact) {
     return (
       <div className="ci-page">
         <div className="ci-not-found">
@@ -55,71 +225,8 @@ const ContactInfo: React.FC = () => {
     );
   }
 
-  const handleEditStart = () => {
-    setEditForm(contact);
-    setIsEditing(true);
-  };
-
-  const handleEditCancel = () => {
-    setEditForm(contact);
-    setIsEditing(false);
-  };
-
-  const handleEditSave = () => {
-    if (editForm) {
-      setContact(editForm);
-      setIsEditing(false);
-    }
-  };
-
-  const handleEditChange = (field: keyof Contact, value: string) => {
-    if (editForm) {
-      setEditForm({
-        ...editForm,
-        [field]: value,
-      });
-    }
-  };
-
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    setUploadError("");
-    setUploadSuccess("");
-
-    try {
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      const response = await fetch(`http://localhost:5000/api/contacts/${contact.id}/photo`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to upload photo");
-      }
-
-      const data = await response.json();
-      
-      // Update local contact state with the photo URL
-      setContact({
-        ...contact,
-        photoUrl: data.photoUrl,
-      });
-
-      setUploadSuccess("Photo uploaded successfully!");
-      setTimeout(() => setUploadSuccess(""), 3000);
-    } catch (error) {
-      setUploadError(error instanceof Error ? error.message : "Error uploading photo");
-    } finally {
-      setUploading(false);
-      // Reset file input
-      event.target.value = "";
-    }
-  };
+  const fullName = `${contact.firstName} ${contact.lastName}`;
+  const addressStr = formatAddress(contact.address);
 
   return (
     <div className="ci-page">
@@ -133,7 +240,7 @@ const ContactInfo: React.FC = () => {
         </button>
         <div className="ci-title-block">
           <span className="ci-label">Contact</span>
-          <h1 className="ci-title">{contact.name}</h1>
+          <h1 className="ci-title">{fullName}</h1>
         </div>
         {!isEditing && (
           <button className="ci-edit-btn" onClick={handleEditStart} title="Edit">
@@ -150,9 +257,9 @@ const ContactInfo: React.FC = () => {
           <div className="ci-photo-section">
             {contact.photoUrl ? (
               <div className="ci-photo-container">
-                <img 
-                  src={`http://localhost:5000${contact.photoUrl}`} 
-                  alt={contact.name} 
+                <img
+                  src={`http://localhost:5000${contact.photoUrl}`}
+                  alt={fullName}
                   className="ci-photo"
                 />
                 <div className="ci-photo-overlay">
@@ -202,26 +309,56 @@ const ContactInfo: React.FC = () => {
           </div>
 
           <div className="ci-details">
-            {isEditing && editForm ? (
+            {isEditing ? (
               <div className="ci-edit-form">
                 <div className="ci-form-group">
-                  <label className="ci-form-label">Name</label>
+                  <label className="ci-form-label">First Name</label>
                   <input
                     type="text"
                     className="ci-form-input"
-                    value={editForm.name}
-                    onChange={(e) => handleEditChange("name", e.target.value)}
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
                   />
                 </div>
 
                 <div className="ci-form-group">
-                  <label className="ci-form-label">Phone</label>
+                  <label className="ci-form-label">Last Name</label>
                   <input
-                    type="tel"
+                    type="text"
                     className="ci-form-input"
-                    value={editForm.phone}
-                    onChange={(e) => handleEditChange("phone", e.target.value)}
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
                   />
+                </div>
+
+                {/* Multiple phones */}
+                <div className="ci-form-group">
+                  <label className="ci-form-label">Phone Numbers</label>
+                  {editForm.phones.map((phone, i) => (
+                    <div key={i} className="ci-phone-row">
+                      <select
+                        className="ci-form-select"
+                        value={phone.label}
+                        onChange={(e) => handlePhoneChange(i, "label", e.target.value)}
+                      >
+                        <option value="mobile">Mobile</option>
+                        <option value="home">Home</option>
+                        <option value="work">Work</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <input
+                        type="tel"
+                        className="ci-form-input"
+                        value={phone.number}
+                        onChange={(e) => handlePhoneChange(i, "number", e.target.value)}
+                        placeholder="Phone number"
+                      />
+                      {editForm.phones.length > 1 && (
+                        <button className="ci-remove-phone" onClick={() => handleRemovePhone(i)} title="Remove">×</button>
+                      )}
+                    </div>
+                  ))}
+                  <button className="ci-add-phone-btn" onClick={handleAddPhone}>+ Add Phone</button>
                 </div>
 
                 <div className="ci-form-group">
@@ -229,18 +366,38 @@ const ContactInfo: React.FC = () => {
                   <input
                     type="email"
                     className="ci-form-input"
-                    value={editForm.email || ""}
-                    onChange={(e) => handleEditChange("email", e.target.value)}
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                   />
                 </div>
 
                 <div className="ci-form-group">
-                  <label className="ci-form-label">Address</label>
+                  <label className="ci-form-label">Street</label>
                   <input
                     type="text"
                     className="ci-form-input"
-                    value={editForm.address || ""}
-                    onChange={(e) => handleEditChange("address", e.target.value)}
+                    value={editForm.address.street || ""}
+                    onChange={(e) => setEditForm({ ...editForm, address: { ...editForm.address, street: e.target.value } })}
+                  />
+                </div>
+
+                <div className="ci-form-group">
+                  <label className="ci-form-label">City</label>
+                  <input
+                    type="text"
+                    className="ci-form-input"
+                    value={editForm.address.city || ""}
+                    onChange={(e) => setEditForm({ ...editForm, address: { ...editForm.address, city: e.target.value } })}
+                  />
+                </div>
+
+                <div className="ci-form-group">
+                  <label className="ci-form-label">Country</label>
+                  <input
+                    type="text"
+                    className="ci-form-input"
+                    value={editForm.address.country || ""}
+                    onChange={(e) => setEditForm({ ...editForm, address: { ...editForm.address, country: e.target.value } })}
                   />
                 </div>
 
@@ -248,8 +405,8 @@ const ContactInfo: React.FC = () => {
                   <label className="ci-form-label">Notes</label>
                   <textarea
                     className="ci-form-textarea"
-                    value={editForm.notes || ""}
-                    onChange={(e) => handleEditChange("notes", e.target.value)}
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   />
                 </div>
 
@@ -264,9 +421,15 @@ const ContactInfo: React.FC = () => {
               </div>
             ) : (
               <>
+                {/* Multiple phone numbers */}
                 <div className="ci-detail-group">
                   <label className="ci-detail-label">Phone</label>
-                  <p className="ci-detail-value">{contact.phone}</p>
+                  {contact.phones.map((p, i) => (
+                    <div key={i} className="ci-phone-detail">
+                      <span className="ci-phone-label-tag">{p.label}</span>
+                      <p className="ci-detail-value">{p.number}</p>
+                    </div>
+                  ))}
                 </div>
 
                 {contact.email && (
@@ -276,10 +439,10 @@ const ContactInfo: React.FC = () => {
                   </div>
                 )}
 
-                {contact.address && (
+                {addressStr && (
                   <div className="ci-detail-group">
                     <label className="ci-detail-label">Address</label>
-                    <p className="ci-detail-value">{contact.address}</p>
+                    <p className="ci-detail-value">{addressStr}</p>
                   </div>
                 )}
 
@@ -312,6 +475,13 @@ const ContactInfo: React.FC = () => {
                 <path d="M7 9l5 3.73 5-3.73"/>
               </svg>
               Email
+            </button>
+            <button className="ci-action-btn ci-delete-btn" title="Delete" onClick={handleDelete}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+              </svg>
+              Delete Contact
             </button>
           </div>
         </div>
