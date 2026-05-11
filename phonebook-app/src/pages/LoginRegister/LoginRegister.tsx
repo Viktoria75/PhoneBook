@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import "./LoginRegister.css";
 
 type Props = {
@@ -18,23 +19,40 @@ function LoginRegister({ onLogin }: Props) {
   const [staySignedIn, setStaySignedIn] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isPasswordMatch = password === confirmPassword;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
     if (isLogin) {
+      // ── Login ──
       if (!email.trim() || !password.trim()) {
         setErrorMessage("Please enter both email and password.");
         return;
       }
 
-      onLogin();
+      setIsSubmitting(true);
+      try {
+        const res = await axios.post("/api/auth/login", {
+          email: email.trim(),
+          password: password.trim(),
+        });
+
+        localStorage.setItem("token", res.data.token);
+        onLogin();
+      } catch (err: any) {
+        const msg = err.response?.data?.message || "Login failed. Please try again.";
+        setErrorMessage(msg);
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
+    // ── Register ──
     if (!fullName.trim() || !phone.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       setErrorMessage("Please fill in all fields.");
       return;
@@ -45,10 +63,23 @@ function LoginRegister({ onLogin }: Props) {
       return;
     }
 
-    setErrorMessage("Registration successful. You can now log in.");
-    setIsLogin(true);
-    setPassword("");
-    setConfirmPassword("");
+    setIsSubmitting(true);
+    try {
+      const res = await axios.post("/api/auth/register", {
+        username: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password: password.trim(),
+      });
+
+      localStorage.setItem("token", res.data.token);
+      onLogin();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Registration failed. Please try again.";
+      setErrorMessage(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (showForgotPassword) {
@@ -158,8 +189,8 @@ function LoginRegister({ onLogin }: Props) {
 
           {errorMessage && <p className="error-text">{errorMessage}</p>}
 
-          <button type="submit" disabled={!isLogin && !isPasswordMatch}>
-            {isLogin ? "Login" : "Register"}
+          <button type="submit" disabled={(!isLogin && !isPasswordMatch) || isSubmitting}>
+            {isSubmitting ? "Please wait..." : isLogin ? "Login" : "Register"}
           </button>
         </form>
 
