@@ -10,8 +10,11 @@ interface Contact {
   email: string;
   name: string;
   phone: string;
-  avatarColor: string;
-  initials: string;
+  avatarColor?: string;
+  initials?: string;
+  email?: string;
+  address?: string;
+  notes?: string;
 }
 
 const ContactList: React.FC = () => {
@@ -69,7 +72,13 @@ const ContactList: React.FC = () => {
             <span className="cl-label">Phonebook</span>
             <h1 className="cl-title">Contacts</h1>
           </div>
-          <div className="cl-pill">{contacts.length}</div>
+          <button className="cl-add-btn" onClick={handleAddContact} title="Add Contact">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <div className="cl-pill">{contactsList.length}</div>
         </div>
 
         {/* Search */}
@@ -103,6 +112,7 @@ const ContactList: React.FC = () => {
                 key={contact._id}
                 className="cl-row"
                 style={{ "--ci": ci, "--li": li } as React.CSSProperties}
+                onClick={() => navigate(`/contacts/${contact.id}`)}
               >
                 <div className="cl-avatar" style={{ background: contact.avatarColor }}>
                   <span className="cl-initials">{contact.initials}</span>
@@ -130,6 +140,91 @@ const ContactList: React.FC = () => {
           </section>
         ))}
       </main>
+
+      {/* Add Contact Modal */}
+      {showModal && (
+        <>
+          <div className="cl-modal-overlay" onClick={handleCloseModal}></div>
+          <div className="cl-modal">
+            <div className="cl-modal-header">
+              <h2 className="cl-modal-title">Add New Contact</h2>
+              <button className="cl-modal-close" onClick={handleCloseModal} title="Close">
+                ×
+              </button>
+            </div>
+
+            <div className="cl-modal-content">
+              <div className="cl-modal-form-group">
+                <label className="cl-modal-label">Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="cl-modal-input"
+                  placeholder="Enter full name"
+                  value={formData.name}
+                  onChange={handleFormChange}
+                />
+              </div>
+
+              <div className="cl-modal-form-group">
+                <label className="cl-modal-label">Phone *</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  className="cl-modal-input"
+                  placeholder="Enter phone number"
+                  value={formData.phone}
+                  onChange={handleFormChange}
+                />
+              </div>
+
+              <div className="cl-modal-form-group">
+                <label className="cl-modal-label">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  className="cl-modal-input"
+                  placeholder="Enter email address"
+                  value={formData.email}
+                  onChange={handleFormChange}
+                />
+              </div>
+
+              <div className="cl-modal-form-group">
+                <label className="cl-modal-label">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  className="cl-modal-input"
+                  placeholder="Enter address"
+                  value={formData.address}
+                  onChange={handleFormChange}
+                />
+              </div>
+
+              <div className="cl-modal-form-group">
+                <label className="cl-modal-label">Notes</label>
+                <textarea
+                  name="notes"
+                  className="cl-modal-textarea"
+                  placeholder="Enter notes"
+                  value={formData.notes}
+                  onChange={handleFormChange}
+                />
+              </div>
+            </div>
+
+            <div className="cl-modal-footer">
+              <button className="cl-modal-cancel-btn" onClick={handleCloseModal}>
+                Cancel
+              </button>
+              <button className="cl-modal-create-btn" onClick={handleCreateContact}>
+                Create Contact
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

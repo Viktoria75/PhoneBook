@@ -98,6 +98,38 @@ button { border: none; background: none; cursor: pointer; }
   margin-bottom: 4px;
 }
 
+/* Add button */
+.cl-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 12px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.15);
+  color: rgba(99, 102, 241, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.cl-add-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.cl-add-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: rgba(165, 180, 252, 0.95);
+  transform: scale(1.05);
+}
+
+.cl-add-btn:active {
+  transform: scale(0.98);
+}
+
 /* ── Search ───────────────────────────────────────────────── */
 .cl-search-wrap {
   position: relative;
@@ -351,9 +383,202 @@ button { border: none; background: none; cursor: pointer; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
 
+/* ── Modal Overlay ────────────────────────────────────────── */
+.cl-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Modal ────────────────────────────────────────────────── */
+.cl-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 480px;
+  background: rgba(20, 24, 46, 0.95);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease-out cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ── Modal Header ─────────────────────────────────────────── */
+.cl-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cl-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f3fa;
+  letter-spacing: -0.02em;
+}
+
+.cl-modal-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 24px;
+  line-height: 1;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cl-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Modal Content ────────────────────────────────────────── */
+.cl-modal-content {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.cl-modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cl-modal-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(99, 102, 241, 0.8);
+}
+
+.cl-modal-input,
+.cl-modal-textarea {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  color: #eceef5;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.cl-modal-input::placeholder,
+.cl-modal-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.cl-modal-input:focus,
+.cl-modal-textarea:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.cl-modal-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ── Modal Footer ─────────────────────────────────────────── */
+.cl-modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cl-modal-cancel-btn,
+.cl-modal-create-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.cl-modal-cancel-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cl-modal-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cl-modal-create-btn {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
+  border-color: rgba(99, 102, 241, 0.3);
+  color: rgba(165, 180, 252, 0.95);
+}
+
+.cl-modal-create-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(139, 92, 246, 0.28));
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px);
+}
+
+.cl-modal-create-btn:active {
+  transform: translateY(0);
+}
+
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 600px) {
   .cl-header { padding: 36px 20px 18px; }
   .cl-title  { font-size: 32px; }
   .cl-main   { padding: 0 12px 80px; }
+  
+  .cl-modal {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+  }
+  
+  .cl-modal-content {
+    max-height: calc(90vh - 140px);
+  }
 }

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage/landingPage";
 import ContactList from "./pages/Contact List/ContactList";
+import ContactInfo from "./pages/Contact Info/ContactInfo";
 import LoginRegister from "./pages/LoginRegister/LoginRegister";
 
 function LoginWrapper() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginWrapper />} />
         <Route path="/contacts" element={<ContactList />} />
+        <Route path="/contacts/:id" element={<ContactInfo />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
