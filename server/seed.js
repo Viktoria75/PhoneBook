@@ -20,14 +20,14 @@ const Contact = require('./models/Contact');
 
 async function seed() {
   try {
-    console.log('🔌 Connecting to MongoDB Atlas...');
+    console.log(' Connecting to MongoDB Atlas...');
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected');
+    console.log(' Connected');
 
     // Clear existing data
     await User.deleteMany({});
     await Contact.deleteMany({});
-    console.log('🗑️  Cleared existing collections');
+    console.log(' Cleared existing collections');
 
     // Create demo user
     const demoUser = new User({
@@ -147,17 +147,17 @@ async function seed() {
     }));
 
     await Contact.insertMany(contactDocs);
-    console.log(`🌱 Inserted ${contacts.length} sample contacts`);
+    console.log(`Inserted ${contacts.length} sample contacts`);
 
     console.log('');
-    console.log('✅ Seed complete! You can now:');
-    console.log('   npm run dev       → start the server');
+    console.log('Seed complete! You can now:');
+    console.log('   npm run dev → start the server');
     console.log('   Login with:  demo@phonebook.com / password123');
 
     await mongoose.disconnect();
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seed error:', err);
+    console.error('Seed error:', err);
     await mongoose.disconnect();
     process.exit(1);
   }

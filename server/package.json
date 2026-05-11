@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "MongoDB schema and seed script for PhoneBook app",
   "scripts": {
+    "dev": "node index.js",
     "seed": "node seed.js"
   },
   "dependencies": {
