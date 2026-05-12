@@ -30,33 +30,6 @@ const upload = multer({
   },
 });
 
-// ── GET /api/contacts/search?q=... — Predictive search ──────
-router.get('/search', requireAuth, async (req, res) => {
-  try {
-    const q = (req.query.q || '').trim();
-    if (!q) {
-      return res.json([]);
-    }
-
-    // Use regex for prefix-based predictive search (works without text index too)
-    const regex = new RegExp(q, 'i');
-    const contacts = await Contact.find({
-      owner: req.user.id,
-      $or: [
-        { firstName: regex },
-        { lastName: regex },
-        { 'phones.number': regex },
-        { email: regex },
-        { notes: regex },
-      ],
-    }).sort({ lastName: 1, firstName: 1 });
-
-    res.json(contacts);
-  } catch (error) {
-    res.status(500).json({ message: 'Search failed.', error: error.message });
-  }
-});
-
 // ── GET /api/contacts — Get all contacts for the logged-in user
 router.get('/', requireAuth, async (req, res) => {
   try {
