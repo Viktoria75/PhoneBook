@@ -112,9 +112,7 @@ const ContactList: React.FC = () => {
     }
   };
 
-  const filteredContacts = contacts;
-
-  const grouped = groupByLetter(filteredContacts);
+  const grouped = groupByLetter(contacts);
   const sortedLetters = Object.keys(grouped).sort();
 
   // Modal handlers
@@ -210,7 +208,7 @@ const ContactList: React.FC = () => {
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
           </button>
-          <div className="cl-pill">{filteredContacts.length}</div>
+          <div className="cl-pill">{contacts.length}</div>
           <button className="cl-logout-btn" onClick={handleLogout} title="Log Out">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path>
@@ -219,8 +217,8 @@ const ContactList: React.FC = () => {
             </svg>
           </button>
         </div>
-
-        {/* Search */}
+  
+        {/* Search Bar - No functionality for now */}
         <div className="cl-search-wrap">
           <svg className="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
@@ -239,13 +237,14 @@ const ContactList: React.FC = () => {
             </button>
           )}
         </div>
+
       </header>
 
       {/* ── List ── */}
       <main className="cl-main">
-        {filteredContacts.length === 0 && (
+        {contacts.length === 0 && (
           <div className="cl-empty">
-            <p>{searchQuery ? "No contacts match your search." : "No contacts yet. Add one!"}</p>
+            <p>No contacts yet. Add one!</p>
           </div>
         )}
         {sortedLetters.map((letter, li) => (
