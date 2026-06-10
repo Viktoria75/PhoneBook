@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useToast } from "../../components/ToastContext";
+import ConfirmModal from "../../components/ConfirmModal";
 import "./ContactList.css";
 
 interface Phone {
@@ -75,31 +77,49 @@ function groupByLetter(list: Contact[]): Record<string, Contact[]> {
 
 const ContactList: React.FC = () => {
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [deleteConfirmInfo, setDeleteConfirmInfo] = useState<{isOpen: boolean, contactId: string | null}>({isOpen: false, contactId: null});
+  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    phone: "",
     email: "",
     address: "",
     notes: "",
   });
+  const [formPhones, setFormPhones] = useState<{label: string, number: string}[]>([{ label: "mobile", number: "" }]);
 
   // Fetch contacts on mount
   useEffect(() => {
-    fetchContacts();
+    fetchContacts(1);
   }, []);
 
-  const fetchContacts = async () => {
+  const fetchContacts = async (pageNum: number) => {
     try {
-      setLoading(true);
-      const response = await axios.get("/api/contacts", { headers: authHeaders() });
+      if (pageNum === 1) setLoading(true);
+      const response = await axios.get(`/api/contacts?page=${pageNum}&limit=50`, { headers: authHeaders() });
       const enriched = response.data.map((c: any, i: number) => enrichContact(c, i));
-      setContacts(enriched);
+      
+      if (pageNum === 1) {
+        setContacts(enriched);
+      } else {
+        setContacts(prev => [...prev, ...enriched]);
+      }
+      
+      setHasMore(enriched.length === 50);
+      setPage(pageNum);
       setError(null);
     } catch (err: any) {
       if (err.response?.status === 401) {
@@ -112,12 +132,25 @@ const ContactList: React.FC = () => {
     }
   };
 
-  const grouped = groupByLetter(contacts);
+  const filteredContacts = contacts.filter((c) => {
+    if (showFavoritesOnly && !c.isFavorite) return false;
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.phone.toLowerCase().includes(q) ||
+      (c.email && c.email.toLowerCase().includes(q)) ||
+      (c.notes && c.notes.toLowerCase().includes(q))
+    );
+  });
+
+  const grouped = groupByLetter(filteredContacts);
   const sortedLetters = Object.keys(grouped).sort();
 
   // Modal handlers
   const handleAddContact = () => {
-    setFormData({ firstName: "", lastName: "", phone: "", email: "", address: "", notes: "" });
+    setFormData({ firstName: "", lastName: "", email: "", address: "", notes: "" });
+    setFormPhones([{ label: "mobile", number: "" }]);
     setShowModal(true);
   };
 
@@ -127,9 +160,25 @@ const ContactList: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleFormPhoneChange = (index: number, field: "label" | "number", value: string) => {
+    const updated = [...formPhones];
+    updated[index] = { ...updated[index], [field]: value };
+    setFormPhones(updated);
+  };
+
+  const handleAddFormPhone = () => {
+    setFormPhones([...formPhones, { label: "mobile", number: "" }]);
+  };
+
+  const handleRemoveFormPhone = (index: number) => {
+    if (formPhones.length <= 1) return;
+    setFormPhones(formPhones.filter((_, i) => i !== index));
+  };
+
   const handleCreateContact = async () => {
-    if (!formData.firstName.trim() || !formData.phone.trim()) {
-      alert("First name and phone number are required.");
+    const validPhones = formPhones.filter(p => p.number.trim());
+    if (!formData.firstName.trim() || validPhones.length === 0) {
+      addToast("First name and at least one phone number are required.", "error");
       return;
     }
 
@@ -138,8 +187,8 @@ const ContactList: React.FC = () => {
         "/api/contacts",
         {
           firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim() || " ",
-          phones: [{ label: "mobile", number: formData.phone.trim() }],
+          lastName: formData.lastName.trim(),
+          phones: validPhones,
           email: formData.email.trim(),
           address: formData.address.trim() ? { street: formData.address.trim() } : undefined,
           notes: formData.notes.trim(),
@@ -147,27 +196,93 @@ const ContactList: React.FC = () => {
         { headers: authHeaders() }
       );
       setShowModal(false);
-      fetchContacts(); // Refresh the list
-    } catch (err) {
-      alert("Failed to create contact. Please try again.");
+      setSearchQuery("");
+      addToast("Contact created successfully", "success");
+      fetchContacts(1);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || "Failed to create contact.";
+      addToast(msg, "error");
     }
   };
 
-  const handleDeleteContact = async (e: React.MouseEvent, contactId: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, contactId: string) => {
     e.stopPropagation(); // Don't navigate to contact info
-    if (!window.confirm("Are you sure you want to delete this contact?")) return;
+    setDeleteConfirmInfo({ isOpen: true, contactId });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmInfo.contactId) return;
 
     try {
-      await axios.delete(`/api/contacts/${contactId}`, { headers: authHeaders() });
-      fetchContacts();
+      await axios.delete(`/api/contacts/${deleteConfirmInfo.contactId}`, { headers: authHeaders() });
+      addToast("Contact deleted", "success");
+      fetchContacts(1);
     } catch (err) {
-      alert("Failed to delete contact.");
+      addToast("Failed to delete contact.", "error");
+    } finally {
+      setDeleteConfirmInfo({ isOpen: false, contactId: null });
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    try {
+      await axios.delete('/api/contacts/all', { headers: authHeaders() });
+      addToast("All contacts deleted", "success");
+      setContacts([]);
+    } catch (err) {
+      addToast("Failed to delete all contacts.", "error");
+    } finally {
+      setIsDeleteAllOpen(false);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await axios.get('/api/contacts/export', { 
+        headers: authHeaders(),
+        responseType: 'blob' 
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'contacts.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addToast("Exported contacts to CSV", "success");
+    } catch (err) {
+      addToast("Export failed", "error");
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      await axios.post('/api/contacts/import', formData, {
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      addToast("Contacts imported successfully", "success");
+      fetchContacts(1);
+    } catch (err) {
+      addToast("Import failed", "error");
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   if (loading) {
@@ -186,7 +301,7 @@ const ContactList: React.FC = () => {
       <div className="cl-page">
         <div className="cl-loading">
           <p>{error}</p>
-          <button className="cl-retry-btn" onClick={fetchContacts}>Retry</button>
+          <button className="cl-retry-btn" onClick={() => fetchContacts(1)}>Retry</button>
         </div>
       </div>
     );
@@ -202,6 +317,24 @@ const ContactList: React.FC = () => {
             <span className="cl-label">Phonebook</span>
             <h1 className="cl-title">Contacts</h1>
           </div>
+          
+          <div className="cl-action-buttons">
+            <button className="cl-action-btn" onClick={handleExport} title="Export CSV">
+              Export
+            </button>
+            <button className="cl-action-btn" onClick={() => fileInputRef.current?.click()} title="Import CSV">
+              Import
+            </button>
+            <button 
+              className="cl-action-btn cl-action-btn-danger" 
+              onClick={() => setIsDeleteAllOpen(true)} 
+              title="Delete All Contacts" 
+            >
+              Delete All
+            </button>
+            <input type="file" accept=".csv" style={{ display: 'none' }} ref={fileInputRef} onChange={handleImport} />
+          </div>
+
           <button className="cl-add-btn" onClick={handleAddContact} title="Add Contact">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -218,24 +351,34 @@ const ContactList: React.FC = () => {
           </button>
         </div>
   
-        {/* Search Bar - No functionality for now */}
+        {/* Search Bar */}
         <div className="cl-search-wrap">
-          <svg className="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            className="cl-search"
-            type="text"
-            placeholder="Search by name, phone, or email…"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="cl-search-x" onClick={() => setSearchQuery("")} aria-label="Clear">
-              ×
-            </button>
-          )}
+          <div className="cl-search-inner">
+            <svg className="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              className="cl-search"
+              type="text"
+              placeholder="Search by name, phone, or email…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              autoComplete="off"
+            />
+            {searchQuery && (
+              <button className="cl-search-x" onClick={() => setSearchQuery("")} aria-label="Clear">
+                ×
+              </button>
+            )}
+          </div>
+          <button
+            className={`cl-fav-toggle${showFavoritesOnly ? ' active' : ''}`}
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            title={showFavoritesOnly ? "Show all contacts" : "Show favorites only"}
+          >
+            {showFavoritesOnly ? "⭐" : "☆"}
+          </button>
         </div>
 
       </header>
@@ -266,7 +409,9 @@ const ContactList: React.FC = () => {
                 </div>
 
                 <div className="cl-info">
-                  <span className="cl-name">{contact.name}</span>
+                  <span className="cl-name">
+                    {contact.isFavorite ? "⭐ " : ""}{contact.name}
+                  </span>
                   <span className="cl-phone">{contact.phone}</span>
                 </div>
 
@@ -279,7 +424,7 @@ const ContactList: React.FC = () => {
                   <button
                     className="cl-btn cl-btn-del"
                     title="Delete"
-                    onClick={(e) => handleDeleteContact(e, contact._id)}
+                    onClick={(e) => handleDeleteClick(e, contact._id)}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="3 6 5 6 21 6"></polyline>
@@ -291,6 +436,18 @@ const ContactList: React.FC = () => {
             ))}
           </section>
         ))}
+        
+        {hasMore && !searchQuery && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+            <button 
+              className="cl-retry-btn" 
+              onClick={() => fetchContacts(page + 1)}
+              style={{ padding: '10px 24px' }}
+            >
+              Load More
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Add Contact Modal */}
@@ -315,6 +472,7 @@ const ContactList: React.FC = () => {
                   placeholder="Enter first name"
                   value={formData.firstName}
                   onChange={handleFormChange}
+                  autoComplete="off"
                 />
               </div>
 
@@ -327,19 +485,52 @@ const ContactList: React.FC = () => {
                   placeholder="Enter last name"
                   value={formData.lastName}
                   onChange={handleFormChange}
+                  autoComplete="off"
                 />
               </div>
 
               <div className="cl-modal-form-group">
-                <label className="cl-modal-label">Phone *</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  className="cl-modal-input"
-                  placeholder="Enter phone number"
-                  value={formData.phone}
-                  onChange={handleFormChange}
-                />
+                <label className="cl-modal-label">Phone Numbers *</label>
+                {formPhones.map((phone, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                    <select
+                      className="cl-modal-input"
+                      value={phone.label}
+                      onChange={(e) => handleFormPhoneChange(i, "label", e.target.value)}
+                      style={{ width: '110px', flex: 'none' }}
+                    >
+                      <option value="mobile">Mobile</option>
+                      <option value="home">Home</option>
+                      <option value="work">Work</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <input
+                      type="tel"
+                      className="cl-modal-input"
+                      placeholder="Enter phone number"
+                      value={phone.number}
+                      onChange={(e) => handleFormPhoneChange(i, "number", e.target.value)}
+                      autoComplete="off"
+                    />
+                    {formPhones.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFormPhone(i)}
+                        style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '8px', width: '36px', height: '36px', cursor: 'pointer', fontSize: '18px', fontWeight: '700', flex: 'none' }}
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleAddFormPhone}
+                  style={{ background: 'none', border: '1px dashed #94a3b8', borderRadius: '8px', padding: '8px 16px', color: '#6366f1', fontWeight: '600', fontSize: '13px', cursor: 'pointer', width: '100%' }}
+                >
+                  + Add a number
+                </button>
               </div>
 
               <div className="cl-modal-form-group">
@@ -351,6 +542,7 @@ const ContactList: React.FC = () => {
                   placeholder="Enter email address"
                   value={formData.email}
                   onChange={handleFormChange}
+                  autoComplete="off"
                 />
               </div>
 
@@ -363,6 +555,7 @@ const ContactList: React.FC = () => {
                   placeholder="Enter address"
                   value={formData.address}
                   onChange={handleFormChange}
+                  autoComplete="off"
                 />
               </div>
 
@@ -389,6 +582,22 @@ const ContactList: React.FC = () => {
           </div>
         </>
       )}
+
+      <ConfirmModal 
+        isOpen={deleteConfirmInfo.isOpen}
+        title="Delete Contact"
+        message="Are you sure you want to delete this contact? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteConfirmInfo({isOpen: false, contactId: null})}
+      />
+
+      <ConfirmModal 
+        isOpen={isDeleteAllOpen}
+        title="Delete All Contacts"
+        message={`Are you sure you want to delete all ${contacts.length} contacts? This action cannot be undone.`}
+        onConfirm={handleDeleteAll}
+        onCancel={() => setIsDeleteAllOpen(false)}
+      />
     </div>
   );
 };

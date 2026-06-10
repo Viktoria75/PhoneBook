@@ -31,6 +31,9 @@ app.get('/', (req, res) => {
   res.send('PhoneBook API is running...');
 });
 
+const errorHandler = require('./middleware/errorHandler');
+app.use(errorHandler);
+
 //Connect to MongoDB Atlas
 mongoose
   .connect(process.env.MONGODB_URI)

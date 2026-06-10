@@ -18,25 +18,29 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { ToastProvider } from "./components/ToastContext";
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginWrapper />} />
-        <Route path="/contacts" element={
-          <ProtectedRoute>
-            <ContactList />
-          </ProtectedRoute>
-        } />
-        <Route path="/contacts/:id" element={
-          <ProtectedRoute>
-            <ContactInfo />
-          </ProtectedRoute>
-        } />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <ToastProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/contacts" element={
+            <ProtectedRoute>
+              <ContactList />
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/:id" element={
+            <ProtectedRoute>
+              <ContactInfo />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ToastProvider>
   );
 }
 
