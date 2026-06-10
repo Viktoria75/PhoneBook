@@ -4,19 +4,19 @@
   justify-content: center;
   align-items: center;
   background:
-    radial-gradient(circle at bottom right, rgba(0, 255, 200, 0.12), transparent 20%),
-    radial-gradient(circle at left center, rgba(80, 100, 255, 0.18), transparent 25%),
-    linear-gradient(90deg, #0a1024 0%, #060b1a 50%, #090f22 100%);
+    radial-gradient(circle at bottom right, rgba(0, 255, 200, 0.15), transparent 20%),
+    radial-gradient(circle at left center, rgba(80, 100, 255, 0.15), transparent 25%),
+    linear-gradient(90deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
   padding: 20px;
 }
 
 .auth-box {
   width: 420px;
-  background: rgba(12, 18, 38, 0.85);
-  border: 1px solid rgba(120, 140, 255, 0.12);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   padding: 32px;
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(10px);
 }
 
@@ -28,7 +28,7 @@
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #6f7cff;
+  color: #4f46e5;
   margin-bottom: 10px;
   font-weight: 600;
 }
@@ -36,20 +36,21 @@
 .auth-box h1 {
   margin-bottom: 24px;
   font-size: 48px;
-  color: #f3f6ff;
-  font-weight: 700;
+  color: #1f2937;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 
 .forgot-title {
   font-size: 30px !important;
-  color: #f3f6ff !important;
+  color: #1f2937 !important;
   margin-bottom: 16px;
 }
 
 .forgot-description {
   font-size: 15px;
   line-height: 1.6;
-  color: rgba(230, 235, 255, 0.8);
+  color: #4b5563;
   margin-bottom: 24px;
 }
 
@@ -62,26 +63,27 @@
 .auth-form input {
   width: 100%;
   padding: 14px 16px;
-  border: 1px solid rgba(120, 140, 255, 0.14);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 18px;
   font-size: 15px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #f3f6ff;
+  background: rgba(0, 0, 0, 0.02);
+  color: #1f2937;
   transition: 0.2s;
 }
 
 .auth-form input::placeholder {
-  color: rgba(220, 225, 255, 0.4);
+  color: #9ca3af;
 }
 
 .auth-form input:hover {
-  border-color: rgba(111, 124, 255, 0.4);
+  border-color: #a5b4fc;
 }
 
 .auth-form input:focus {
   outline: none;
-  border-color: #6f7cff;
-  box-shadow: 0 0 0 3px rgba(111, 124, 255, 0.15);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  background: #ffffff;
 }
 
 .password-wrapper {
@@ -101,7 +103,7 @@
   background: transparent;
   cursor: pointer;
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.75);
+  color: #6b7280;
 }
 
 .auth-form button[type="submit"] {
@@ -109,7 +111,7 @@
   padding: 14px;
   border: none;
   border-radius: 18px;
-  background: linear-gradient(90deg, #4f46e5, #6366f1);
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
   color: white;
   font-size: 16px;
   font-weight: 600;
@@ -119,18 +121,18 @@
 
 .auth-form button[type="submit"]:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25);
 }
 
 .auth-form button[type="submit"]:disabled {
-  background: #4b4f66;
+  background: #d1d5db;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
 .error-text {
-  color: #ff7c9d;
+  color: #ef4444;
   font-size: 12px;
   margin-top: -6px;
 }
@@ -139,14 +141,14 @@
   margin-top: 12px;
   text-align: right;
   font-size: 13px;
-  color: #8f9bff;
+  color: #4f46e5;
   cursor: pointer;
 }
 
 .back-to-login {
   margin-top: 18px;
   text-align: center;
-  color: #8f9bff;
+  color: #4f46e5;
   cursor: pointer;
   font-size: 14px;
 }
@@ -154,12 +156,13 @@
 .switch-text {
   margin-top: 18px;
   text-align: center;
-  color: rgba(230, 235, 255, 0.75);
+  color: #4b5563;
 }
 
 .switch-text span {
-  color: #8f9bff;
+  color: #4f46e5;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .stay-signed-in {
@@ -167,7 +170,7 @@
   align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: rgba(230, 235, 255, 0.85);
+  color: #4b5563;
   cursor: pointer;
   margin-top: -4px;
 }
@@ -175,6 +178,28 @@
 .stay-signed-in input {
   width: 16px;
   height: 16px;
-  accent-color: #6f7cff;
+  accent-color: #4f46e5;
   cursor: pointer;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .auth-box {
+    width: 100%;
+    padding: 24px;
+    border-radius: 16px;
+  }
+  
+  .auth-box h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+
+  .forgot-box {
+    width: 100%;
+  }
+
+  .forgot-title {
+    font-size: 24px !important;
+  }
 }

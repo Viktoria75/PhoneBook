@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./LoginRegister.css";
 
@@ -7,6 +8,7 @@ type Props = {
 };
 
 function LoginRegister({ onLogin }: Props) {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -214,6 +216,12 @@ function LoginRegister({ onLogin }: Props) {
             }}
           >
             {isLogin ? " Register" : " Login"}
+          </span>
+        </p>
+
+        <p className="switch-text" style={{ marginTop: '8px' }}>
+          <span onClick={() => navigate("/")} style={{ color: '#6366f1', cursor: 'pointer' }}>
+            ← Back to Home
           </span>
         </p>
       </div>

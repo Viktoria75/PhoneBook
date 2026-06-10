@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { useToast } from "../../components/ToastContext";
+import ConfirmModal from "../../components/ConfirmModal";
 import "./ContactInfo.css";
 
 interface Phone {
@@ -62,7 +64,9 @@ const ContactInfo: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
+  const { addToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
@@ -119,14 +123,40 @@ const ContactInfo: React.FC = () => {
 
   const handleEditSave = async () => {
     if (!contact) return;
+    
+    // Frontend Validation
+    if (!editForm.firstName.trim()) {
+      addToast("First name is required", "error");
+      return;
+    }
+    
+    const validPhones = editForm.phones.filter(p => p.number.trim());
+    if (validPhones.length === 0) {
+      addToast("At least one phone number is required", "error");
+      return;
+    }
+    
+    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
+    for (const p of validPhones) {
+      if (!phoneRegex.test(p.number)) {
+        addToast(`Invalid phone format: ${p.number}`, "error");
+        return;
+      }
+    }
+    
+    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) {
+      addToast("Invalid email address format", "error");
+      return;
+    }
+
     try {
       const res = await axios.put(`/api/contacts/${contact._id}`, {
-        firstName: editForm.firstName,
-        lastName: editForm.lastName,
-        phones: editForm.phones.filter(p => p.number.trim()),
-        email: editForm.email,
+        firstName: editForm.firstName.trim(),
+        lastName: editForm.lastName.trim(),
+        phones: validPhones,
+        email: editForm.email.trim(),
         address: editForm.address,
-        notes: editForm.notes,
+        notes: editForm.notes.trim(),
       }, { headers: authHeaders() });
 
       const c = res.data;
@@ -136,8 +166,24 @@ const ContactInfo: React.FC = () => {
         initials: `${(c.firstName || "?")[0]}${(c.lastName || "?")[0]}`.toUpperCase(),
       });
       setIsEditing(false);
+      addToast("Contact updated successfully", "success");
     } catch (err) {
-      alert("Failed to save changes.");
+      addToast("Failed to save changes.", "error");
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!contact) return;
+    try {
+      const res = await axios.put(`/api/contacts/${contact._id}/favorite`, {}, { headers: authHeaders() });
+      setContact({ ...contact, isFavorite: res.data.isFavorite });
+      if (res.data.isFavorite) {
+        addToast("Added to favorites", "success");
+      } else {
+        addToast("Removed from favorites", "info");
+      }
+    } catch (err) {
+      addToast("Failed to update favorite status", "error");
     }
   };
 
@@ -190,15 +236,21 @@ const ContactInfo: React.FC = () => {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!contact) return;
-    if (!window.confirm(`Delete ${contact.firstName} ${contact.lastName}?`)) return;
 
     try {
       await axios.delete(`/api/contacts/${contact._id}`, { headers: authHeaders() });
+      addToast("Contact deleted", "success");
       navigate("/contacts");
     } catch (err) {
-      alert("Failed to delete contact.");
+      addToast("Failed to delete contact.", "error");
+    } finally {
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -240,7 +292,16 @@ const ContactInfo: React.FC = () => {
         </button>
         <div className="ci-title-block">
           <span className="ci-label">Contact</span>
-          <h1 className="ci-title">{fullName}</h1>
+          <h1 className="ci-title">
+            {fullName} 
+            <button 
+              onClick={handleToggleFavorite} 
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '28px', marginLeft: '10px' }}
+              title={contact.isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              {contact.isFavorite ? "⭐" : "☆"}
+            </button>
+          </h1>
         </div>
         {!isEditing && (
           <button className="ci-edit-btn" onClick={handleEditStart} title="Edit">
@@ -476,7 +537,7 @@ const ContactInfo: React.FC = () => {
               </svg>
               Email
             </button>
-            <button className="ci-action-btn ci-delete-btn" title="Delete" onClick={handleDelete}>
+            <button className="ci-action-btn ci-delete-btn" title="Delete" onClick={handleDeleteClick}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
@@ -486,6 +547,14 @@ const ContactInfo: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <ConfirmModal 
+        isOpen={isDeleteModalOpen}
+        title="Delete Contact"
+        message={`Are you sure you want to delete ${contact.firstName} ${contact.lastName}? This action cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+      />
     </div>
   );
 };

@@ -13,9 +13,9 @@ const phoneSchema = new mongoose.Schema({
 }, { _id: false });
 
 const addressSchema = new mongoose.Schema({
-  street:     { type: String, default: '' },
-  city:       { type: String, default: '' },
-  country:    { type: String, default: '' },
+  street: { type: String, default: '' },
+  city: { type: String, default: '' },
+  country: { type: String, default: '' },
   postalCode: { type: String, default: '' },
 }, { _id: false });
 
@@ -33,8 +33,8 @@ const contactSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    required: [true, 'Last name is required'],
     trim: true,
+    default: '',
   },
   phones: {
     type: [phoneSchema],
@@ -75,7 +75,7 @@ contactSchema.index(
   { name: 'search_index' }
 );
 
-// Compound index: fast lookup for a user's contacts sorted by last name
+// Compound index lookup for a user's contacts sorted by last name
 contactSchema.index({ owner: 1, lastName: 1 });
 
 // Virtual for full name
